@@ -13,3 +13,4 @@ R6: git reset --soft HEAR~1 or git reset --hard HEAR~1
 R7: git log
     git show
 R8: git remote add origin https://github.com/ffrjff/Lab1-2022112915.git
+R9: git push -u origin main

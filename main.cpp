@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <limits>
 #include <windows.h>
+#include <fstream>
 
 using namespace std;
 
@@ -43,6 +44,14 @@ int main(int argc, char *argv[])
         system("cls");
         return 1;
     }
+
+    ofstream file("random_walk.txt", ios::out | ios::trunc);
+    if (!file.is_open()) {
+        cerr << "can't open: " << "random_walk.txt" << endl;
+        return 1;
+    }
+    file.close();
+
     string filename = argv[1];
     string fileContent = readFileToString(filename);
     if (fileContent.empty())
@@ -51,17 +60,13 @@ int main(int argc, char *argv[])
         system("cls");
         return 1;
     }
-
     string processedText = processText(fileContent);
     cout << "Processed text: " << endl
          << processedText << endl;
-
     Graph graph(processedText);
     graph.graphCreate();
-
     system("cls");
     int choice;
-
     while (true)
     {
         menu();
@@ -75,6 +80,10 @@ int main(int argc, char *argv[])
             {
                 system("cls");
                 graph.showDirectedGraph();
+                cout << endl << endl;
+                cout << "this function(save graph to png) require graphviz" << endl;
+                cout << "I provide the png of Easy Test.txt in document images" << endl;
+                cout << "If you need to check the function, just remove following // in main.c:93 " << endl;
                 cout << "Save graph to file? (y/n): ";
                 char saveChoice;
                 cin >> saveChoice;

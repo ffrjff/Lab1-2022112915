@@ -17,7 +17,6 @@
 #include <utility>
 #include <random>
 
-
 using namespace std;
 
 bool initWords(int &index, string &preWord, string &curWord, const string &text);
@@ -41,7 +40,6 @@ void Graph::graphCreate()
             cout << "success to build graph" << endl;
             return;
         }
-        // cout << "New pair: " << preWord << " " << curWord << endl;
     }
 }
 
@@ -69,18 +67,16 @@ void Graph::showDirectedGraph()
 
 string Graph::queryBridgeWords(string word1, string word2)
 {
-    if (vertexMap.find(word1) == vertexMap.end())
+    transform(word1.begin(), word1.end(), word1.begin(), ::tolower);
+    transform(word2.begin(), word2.end(), word2.begin(), ::tolower);
+    if (vertexMap.find(word1) == vertexMap.end() || vertexMap.find(word2) == vertexMap.end())
     {
-        return "No " + word1 + " in the graph!";
-    }
-    else if (vertexMap.find(word2) == vertexMap.end())
-    {
-        return "No " + word2 + " in the graph!";
+        return "No " + word1 + " or " + word2 + " in the graph!";
     }
     int index1 = vertexMap[word1];
     int index2 = vertexMap[word2];
     vector<string> bridgeWords;
-    for (int i = 0; i < vertices.size(); ++i)
+    for (int i = 0; i < numVertex; ++i)
     {
         if (weight[index1][i] > 0 && weight[i][index2] > 0)
         {
@@ -89,24 +85,30 @@ string Graph::queryBridgeWords(string word1, string word2)
     }
     if (bridgeWords.empty())
     {
-        return "No bridge words from \"" + word1 + "\" to \"" + word2 + "\"!";
+        return "No bridge words from " + word1 + " to " + word2 + "!";
+    }
+    else if (bridgeWords.size() == 1)
+    {
+        return "The bridge word from " + word1 + " to " + word2 + " is: " + bridgeWords[0] + ".";
     }
     else
     {
-        string result = "The bridge words from " + word1 + " to " + word2 + " is: \"";
-        for (int i = 0; i < bridgeWords.size(); ++i)
+        string result = "The bridge words from " + word1 + " to " + word2 + " are: ";
+        for (size_t i = 0; i < bridgeWords.size(); ++i)
         {
-            result += bridgeWords[i];
-            if (i < bridgeWords.size() - 1)
+            if (i == bridgeWords.size() - 1)
             {
-                result += ", ";
+                result += "and " + bridgeWords[i] + ".";
             }
-            else if (bridgeWords.size() > 1)
+            else if (i == bridgeWords.size() - 2)
             {
-                result += " and ";
+                result += bridgeWords[i] + " ";
+            }
+            else
+            {
+                result += bridgeWords[i] + ", ";
             }
         }
-        result += "\"";
         return result;
     }
 }
@@ -114,17 +116,15 @@ string Graph::queryBridgeWords(string word1, string word2)
 vector<string> Graph::lightQueryBridgeWords(string word1, string word2)
 {
     vector<string> bridgeWords;
-    if (vertexMap.find(word1) == vertexMap.end())
-    {
-        return bridgeWords;
-    }
-    else if (vertexMap.find(word2) == vertexMap.end())
+    transform(word1.begin(), word1.end(), word1.begin(), ::tolower);
+    transform(word2.begin(), word2.end(), word2.begin(), ::tolower);
+    if (vertexMap.find(word1) == vertexMap.end() || vertexMap.find(word2) == vertexMap.end())
     {
         return bridgeWords;
     }
     int index1 = vertexMap[word1];
     int index2 = vertexMap[word2];
-    for (int i = 0; i < vertices.size(); ++i)
+    for (int i = 0; i < numVertex; ++i)
     {
         if (weight[index1][i] > 0 && weight[i][index2] > 0)
         {
@@ -137,20 +137,22 @@ vector<string> Graph::lightQueryBridgeWords(string word1, string word2)
     }
     else
     {
-        string result = "The bridge words from " + word1 + " to " + word2 + " is: \"";
-        for (int i = 0; i < bridgeWords.size(); ++i)
+        string result = "The bridge words from " + word1 + " to " + word2 + " are: ";
+        for (size_t i = 0; i < bridgeWords.size(); ++i)
         {
-            result += bridgeWords[i];
-            if (i < bridgeWords.size() - 1)
+            if (i == bridgeWords.size() - 1)
             {
-                result += ", ";
+                result += "and " + bridgeWords[i] + ".";
             }
-            else if (bridgeWords.size() > 1)
+            else if (i == bridgeWords.size() - 2)
             {
-                result += " and ";
+                result += bridgeWords[i] + " ";
+            }
+            else
+            {
+                result += bridgeWords[i] + ", ";
             }
         }
-        result += "\"";
         return bridgeWords;
     }
 }
@@ -187,6 +189,8 @@ string Graph::generateNewText(string inputText)
 
 vector<vector<string>> Graph::calcShortestPath(string word1, string word2)
 {
+    transform(word1.begin(), word1.end(), word1.begin(), ::tolower);
+    transform(word2.begin(), word2.end(), word2.begin(), ::tolower);
     if (vertexMap.find(word1) == vertexMap.end())
     {
         cout << "Word \"" << word1 << "\" is not in the graph!" << endl;
@@ -296,113 +300,57 @@ void Graph::singleSourceShortestPaths(const string &start)
     }
 }
 
-// double Graph::calPageRank(string word)
-// {
-//     if (vertexMap.find(word) == vertexMap.end())
-//     {
-//         cout << "Word \"" << word << "\" is not in the graph!" << endl;
-//         return -1;
-//     }
-
-//     int N = numVertex;             // 图的节点总数
-//     double d = 0.85;               // 阻尼因子
-//     double epsilon = 1e-6;         // 收敛精度
-//     vector<double> PR(N, 1.0 / N); // 初始PR值均为1/N
-//     vector<double> PR_new(N, 0.0); // 存储更新后的PR值
-
-//     // 获取目标单词的索引
-//     int wordIndex = vertexMap[word];
-
-//     // 迭代计算PageRank值，直到收敛
-//     bool converged = false;
-//     while (!converged)
-//     {
-//         converged = true;
-
-//         // 计算每个节点的新PR值
-//         for (int u = 0; u < N; ++u)
-//         {
-//             PR_new[u] = (1 - d) / N; // PR(u) = (1 - d) / N
-//             for (int v = 0; v < N; ++v)
-//             {
-//                 if (weight[v][u] > 0)
-//                 { // 如果v指向u
-//                     int L_v = 0;
-//                     for (int k = 0; k < N; ++k)
-//                     {
-//                         if (weight[v][k] > 0)
-//                         {
-//                             L_v++; // 计算v的出度
-//                         }
-//                     }
-//                     PR_new[u] += d * PR[v] / L_v; // PR(u) += d * PR(v) / L(v)
-//                 }
-//             }
-//         }
-//         converged = true;
-//         for (int i = 0; i < N; ++i)
-//         {
-//             if (fabs(PR_new[i] - PR[i]) > epsilon)
-//             { // 使用fabs计算浮点数的绝对值
-//                 converged = false;
-//                 break;
-//             }
-//         }
-//         PR = PR_new;
-//     }
-//     return PR[wordIndex];
-// }
-
-double Graph::calPageRank(std::string word) {
-    // 检查顶点是否存在
+double Graph::calPageRank(string word) {
+    transform(word.begin(), word.end(), word.begin(), ::tolower);
     if (vertexMap.find(word) == vertexMap.end()) {
-        return -1.0;  // 顶点不存在返回-1
+        cerr << "Word not found in the graph.\n";
+        return -1.0;
     }
-
-    // PageRank算法参数
-    const double dampingFactor = 0.85;  // 阻尼系数
-    const double tolerance = 1e-6;      // 收敛阈值
-    const int maxIterations = 100;      // 最大迭代次数
-
-    // 初始化PR值
-    std::vector<double> prValues(numVertex, 1.0 / numVertex);
-    std::vector<double> tempPrValues(numVertex);
-
-    // 迭代计算
-    for (int iter = 0; iter < maxIterations; ++iter) {
-        double diff = 0.0;
-        tempPrValues = prValues;
-
-        // 计算每个顶点的PR值
-        for (int i = 0; i < numVertex; ++i) {
-            double sum = 0.0;
-
-            // 计算所有入链贡献
-            for (int j = 0; j < numVertex; ++j) {
-                if (weight[j][i] > 0) {  // 存在从j到i的边
-                    int outDegree = 0;
-                    for (int k = 0; k < numVertex; ++k) {
-                        if (weight[j][k] > 0) outDegree++;
-                    }
-                    if (outDegree > 0) {
-                        sum += tempPrValues[j] / outDegree;
+    const double dampingFactor = 0.85;
+    const double tolerance = 1e-6;
+    int iterations = 100;
+    int wordIndex = vertexMap[word];
+    int n = numVertex;
+    // TF-IDF
+    vector<double> pr(n, 0.0);
+    double totalImportance = 0.0;
+    for (int i = 0; i < n; ++i) {
+        double tf = accumulate(weight[i].begin(), weight[i].end(), 0.0);
+        double idf = log((double)n / (1 + weight[i][i]));
+        pr[i] = tf * idf;  // TF-IDF
+        totalImportance += pr[i];
+    }
+    for (int i = 0; i < n; ++i) {
+        pr[i] /= totalImportance;
+    }
+    vector<double> newPr(n, 0.0);
+    vector<int> outDegrees(n, 0);
+    for (int i = 0; i < n; ++i) {
+        outDegrees[i] = accumulate(weight[i].begin(), weight[i].end(), 0);
+    }
+    for (int iter = 0; iter < iterations; ++iter) {
+        fill(newPr.begin(), newPr.end(), (1.0 - dampingFactor) / n);
+        for (int i = 0; i < n; ++i) {
+            if (outDegrees[i] == 0) {
+                for (int j = 0; j < n; ++j) {
+                    newPr[j] += dampingFactor * pr[i] / n;
+                }
+            } else {
+                for (int j = 0; j < n; ++j) {
+                    if (weight[i][j] > 0) {
+                        newPr[j] += dampingFactor * pr[i] * weight[i][j] / outDegrees[i];
                     }
                 }
             }
-
-            // 更新PR值
-            prValues[i] = (1 - dampingFactor) / numVertex + dampingFactor * sum;
-            diff += std::abs(prValues[i] - tempPrValues[i]);
         }
-
-        // 检查收敛
-        if (diff < tolerance) {
-            break;
+        double diff = 0.0;
+        for (int i = 0; i < n; ++i) {
+            diff += fabs(newPr[i] - pr[i]);
         }
+        pr.swap(newPr);
+        if (diff < tolerance) break;
     }
-
-    // 返回指定顶点的PR值
-    return prValues[vertexMap[word]];
+    return pr[wordIndex];
 }
 
 string Graph::randomWalk()
@@ -411,19 +359,16 @@ string Graph::randomWalk()
     {
         return "Graph is empty.";
     }
-    std::random_device rd;
-    std::mt19937 gen(static_cast<unsigned>(time(nullptr)));
-    std::uniform_int_distribution<> distrib(0, numVertex * 100);
+    random_device rd;
+    mt19937 gen(static_cast<unsigned>(time(nullptr)));
+    uniform_int_distribution<> distrib(0, numVertex * 100);
     int startIndex = distrib(gen) % numVertex;
     cout << "start index: " << startIndex << endl;
-    // srand(time(nullptr));
-    // int startIndex = rand() % numVertex;
     string startNode = vertices[startIndex];
     vector<vector<bool>> visitedEdges(numVertex, vector<bool>(numVertex, false));
     vector<string> path;
     path.push_back(startNode);
     int currentIndex = startIndex;
-    
     while (true)
     {
         vector<int> neighbors;
@@ -448,7 +393,6 @@ string Graph::randomWalk()
         path.push_back(vertices[nextIndex]);
         currentIndex = nextIndex;
     }
-    
     string result;
     for (const auto &node : path)
     {
@@ -458,7 +402,6 @@ string Graph::randomWalk()
     {
         result.pop_back();
     }
-    
     ofstream outFile("random_walk.txt", ios::app);
     if (outFile.is_open())
     {
@@ -470,7 +413,7 @@ string Graph::randomWalk()
     {
         cerr << "Error: Unable to save to file." << endl;
     }
-    
+
     return result;
 }
 
@@ -488,37 +431,32 @@ Graph::Graph(const string &inputText)
     weight.resize(numVertex, vector<int>(numVertex, 0));
 }
 
-void Graph::saveGraphToFile(const std::string& filename) {
-    std::ofstream dotFile("graph.dot");
+void Graph::saveGraphToFile(const string &filename)
+{
+    ofstream dotFile("graph.dot");
     dotFile << "digraph G {\n";
-    dotFile << "  rankdir=LR;\n"; // 从左到右布局
-    
-    // 添加所有节点
-    for (const auto& vertex : vertices) {
+    dotFile << "  rankdir=LR;\n";
+    for (const auto &vertex : vertices)
+    {
         dotFile << "  \"" << vertex << "\";\n";
     }
-    
-    // 添加所有边
-    for (int i = 0; i < numVertex; ++i) {
-        for (int j = 0; j < numVertex; ++j) {
-            if (weight[i][j] > 0) {
-                dotFile << "  \"" << vertices[i] << "\" -> \"" << vertices[j] 
-                       << "\" [label=\"" << weight[i][j] << "\"];\n";
+    for (int i = 0; i < numVertex; ++i)
+    {
+        for (int j = 0; j < numVertex; ++j)
+        {
+            if (weight[i][j] > 0)
+            {
+                dotFile << "  \"" << vertices[i] << "\" -> \"" << vertices[j]
+                        << "\" [label=\"" << weight[i][j] << "\"];\n";
             }
         }
     }
-    
     dotFile << "}\n";
     dotFile.close();
-    
-    // 调用Graphviz生成图片
-    std::string cmd = "dot -Tpng graph.dot -o " + filename;
+    string cmd = "dot -Tpng graph.dot -o " + filename;
     system(cmd.c_str());
-    
-    // 可选：删除临时dot文件
     remove("graph.dot");
-    
-    std::cout << "Graph saved to " << filename << std::endl;
+    cout << "Graph saved to " << filename << endl;
 }
 
 bool readWord(int &index, string &word, const string &text)
